@@ -8,3 +8,5 @@ ensure-daemon.lock
 __pycache__/
 .venv/
 node_modules/
+.claude/
+AGENTS.md

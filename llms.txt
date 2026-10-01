@@ -1,0 +1,20 @@
+# cursor-hindsight-ondemand
+
+> On-demand local Hindsight memory daemon for Cursor on Windows.
+
+This project starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud.
+
+## Docs
+
+- [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): install, how it works, FAQ
+- [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
+- [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
+
+## Upstream
+
+- Hindsight: https://github.com/vectorize-io/hindsight
+- Cursor: https://cursor.com
+
+## Not included
+
+GitNexus and other code-graph tools are out of scope. This repo only covers on-demand Hindsight lifecycle wrappers for Cursor.
