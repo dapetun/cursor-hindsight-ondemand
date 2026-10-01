@@ -1,42 +1,28 @@
 # Cursor Hindsight on-demand
 
-Start the **local** Hindsight daemon only when Cursor agent work needs it — not at Windows logon.
+Local long-term memory for Cursor — started when you actually need it, not when Windows boots.
 
-This repository ships small wrapper scripts + example Cursor configs. It does **not** redistribute Hindsight, Cursor, or Node packages.
+Hindsight is great as a local daemon, but leaving it in Startup wastes RAM and CPU all day. These small wrappers turn it on from Cursor itself: when an agent session starts, or when MCP tools are loaded. Between chats, nothing has to sit in the background.
 
-## License (MIT is OK)
+This repo is the glue (scripts + example configs). You still install [Hindsight](https://github.com/vectorize-io/hindsight) and [Cursor](https://cursor.com) yourself.
 
-**This wrapper is MIT-licensed** (see `LICENSE`).
+## How it works
 
-Third-party licenses (dependencies you install yourself; see `NOTICE`):
+1. **Agent session** — a `sessionStart` hook checks `http://127.0.0.1:9077/health`. If the daemon is down, it starts it, waits until it is ready (up to about two and a half minutes), then runs the normal Hindsight recall.
+2. **MCP tools** — the same check runs before opening a stdio proxy to the local Hindsight MCP endpoint.
+3. **Local only** — keep `hindsightApiUrl` pointed at `127.0.0.1:9077` so a cold start never quietly falls through to the hosted cloud API.
 
-| Component | License | Notes |
-|-----------|---------|--------|
-| Hindsight / hindsight-embed | MIT | Upstream: [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) |
-| mcp-remote | MIT | Pulled via `npx` at runtime |
-| Cursor IDE | Proprietary | Not redistributed |
+The first launch after idle can take roughly **40–120 seconds** while models and the DB warm up. Set the Cursor `sessionStart` timeout to **180** so that first chat can wait.
 
-**GitNexus is intentionally not included.** It uses [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/), which is not MIT and restricts commercial use. Keep code-graph tooling separate if you need a clean MIT wrapper.
+## Requirements
 
-You may publish this repo under MIT. Keep upstream copyright notices if you later vendor any Hindsight source files (this repo does not).
+- Windows with PowerShell  
+- Cursor  
+- Hindsight local / embed + the official Cursor integration (so `session_start.py` / `retain.py` are on disk)  
+- Python 3 (hooks)  
+- Node.js with `npx` (MCP launcher)
 
-## What it does
-
-1. **`sessionStart` hook** — `ensure-daemon.ps1` checks `http://127.0.0.1:9077/health`, starts the daemon if needed (waits up to ~150s), then runs the official Hindsight `session_start.py` recall.
-2. **MCP launcher** — same ensure step, then `mcp-remote` proxies stdio ↔ local Hindsight MCP.
-3. **No cloud fallback** — keep `hindsightApiUrl` set to `http://127.0.0.1:9077` so a down daemon does not silently switch to hosted Hindsight.
-
-Cold start on a typical Windows machine was measured around **40–120 seconds**. Raise the Cursor `sessionStart` timeout to **180** so the first chat can wait.
-
-## Prerequisites
-
-- Windows + PowerShell
-- [Cursor](https://cursor.com)
-- Official Hindsight local/embed install + Cursor plugin/init (so `~/.hindsight/plugin-host/.../session_start.py` exists)
-- Node.js (`npx`) for the MCP launcher
-- Python 3 for Cursor hooks
-
-Known upstream issue: some Hindsight `init` installs omit `scripts/lib/rules_file.py`, which breaks `session_start.py`. Copy that file from the upstream Hindsight Cursor integration if you hit `ModuleNotFoundError: lib.rules_file`.
+If `session_start.py` fails with `ModuleNotFoundError: lib.rules_file`, your Hindsight install is missing `rules_file.py` — grab that file from the upstream Cursor integration and place it next to the other plugin `lib` modules.
 
 ## Install
 
@@ -44,72 +30,63 @@ Known upstream issue: some Hindsight `init` installs omit `scripts/lib/rules_fil
 git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
 cd cursor-hindsight-ondemand
 .\install.ps1
-# optional: write example configs (skips overwrite of existing files)
+```
+
+Copy the wrappers into `%USERPROFILE%\.hindsight`. To also drop example Cursor configs (existing files are left alone; examples are written beside them):
+
+```powershell
 .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson
 ```
 
-Or copy `scripts/*` into `%USERPROFILE%\.hindsight\` and merge `examples/` into `%USERPROFILE%\.cursor\` / `%USERPROFILE%\.hindsight\cursor.json` by hand.
-
 Then:
 
-1. Confirm `~/.hindsight/cursor.json` uses `"hindsightApiUrl": "http://127.0.0.1:9077"`.
-2. Remove any `Startup\hindsight-local-memory.cmd` (or similar) Windows autostart.
+1. Make sure `~/.hindsight/cursor.json` uses `"hindsightApiUrl": "http://127.0.0.1:9077"`.
+2. Remove any Windows Startup shortcut that used to start the daemon at login.
 3. Reload Cursor.
 
-## Layout
+Manual install works too: copy `scripts/*` into `~/.hindsight` and merge the JSON under `examples/` into `~/.cursor` / `~/.hindsight` as you prefer.
 
-```
-scripts/
-  ensure-daemon.ps1              # health check + start
-  start-daemon.ps1               # hindsight-embed daemon start
-  mcp-launch.ps1                 # ensure + mcp-remote
-  session-start-with-ensure.py   # Cursor sessionStart entry
-examples/
-  hooks.json
-  mcp.json
-  cursor.json
-install.ps1
-LICENSE
-NOTICE
+## Repository layout
+
+```text
+scripts/          wrappers installed under ~/.hindsight
+examples/         sample hooks.json, mcp.json, cursor.json
+install.ps1       copies scripts (optional config writers)
+LICENSE           MIT
+NOTICE            third-party attributions
 ```
 
-## Security notes
+## License
 
-- Bind/use **localhost only** (`127.0.0.1`).
-- Do not commit API keys or personal `cursor.json` with secrets.
-- This project does not grant rights to Hindsight Cloud or any hosted service.
+MIT — see [LICENSE](LICENSE). Third-party software you install separately is listed in [NOTICE](NOTICE).
 
 ---
 
 # Cursor Hindsight по требованию
 
-Локальный демон Hindsight поднимается **только когда нужна агентская работа в Cursor**, а не при входе в Windows.
+Локальная долгосрочная память для Cursor — включается, когда она реально нужна, а не при загрузке Windows.
 
-В репозитории — обёртки и примеры конфигов Cursor. **Hindsight, Cursor и npm-пакеты здесь не распространяются.**
+Hindsight удобен как локальный демон, но держать его в автозагрузке — лишняя нагрузка на весь день. Эти небольшие обёртки поднимают его из самого Cursor: в начале агентской сессии или при подключении MCP. Пока чата нет, фоновый процесс не обязателен.
 
-## Лицензия (MIT можно)
+Здесь только «клей» (скрипты и примеры конфигов). [Hindsight](https://github.com/vectorize-io/hindsight) и [Cursor](https://cursor.com) ставятся отдельно.
 
-**Обёртка под MIT** (файл `LICENSE`).
+## Как это устроено
 
-Чужие компоненты (ставите сами; см. `NOTICE`):
+1. **Агентская сессия** — хук `sessionStart` проверяет `http://127.0.0.1:9077/health`. Если демон молчит, запускает его, ждёт готовности (до ~2,5 минут) и делает обычный recall Hindsight.
+2. **Инструменты MCP** — та же проверка перед stdio-прокси к локальному MCP Hindsight.
+3. **Только localhost** — в `hindsightApiUrl` оставляйте `127.0.0.1:9077`, чтобы при холодном старте не уехать в облачный API.
 
-| Компонент | Лицензия | Заметки |
-|-----------|----------|---------|
-| Hindsight / hindsight-embed | MIT | Upstream: [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) |
-| mcp-remote | MIT | Подтягивается через `npx` |
-| Cursor IDE | Проприетарный | Не входит в репозиторий |
+Первый подъём после простоя обычно занимает **40–120 секунд**. Таймаут `sessionStart` в Cursor лучше поставить на **180**.
 
-**GitNexus намеренно не включён.** У него [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/) — это не MIT и ограничивает коммерческое использование. Граф кода лучше держать отдельно, чтобы обёртка оставалась чистым MIT.
+## Что нужно
 
-Публиковать этот репозиторий под MIT можно. Если позже начнёте вендорить исходники Hindsight — сохраняйте их copyright notice (сейчас исходников Hindsight в репо нет).
+- Windows и PowerShell  
+- Cursor  
+- Локальный Hindsight / embed и официальная интеграция для Cursor  
+- Python 3 для хуков  
+- Node.js с `npx` для MCP launcher  
 
-## Что делает
-
-1. **Хук `sessionStart`** — проверка `/health`, при необходимости старт демона (до ~150 с), затем официальный `session_start.py`.
-2. **MCP launcher** — тот же ensure, затем `mcp-remote` между stdio и локальным MCP.
-3. **Без ухода в облако** — в конфиге только `http://127.0.0.1:9077`.
-
-Холодный старт обычно **40–120 с**; таймаут `sessionStart` лучше **180**.
+Если `session_start.py` падает с `ModuleNotFoundError: lib.rules_file`, в установке не хватает `rules_file.py` — возьмите его из upstream Cursor-интеграции Hindsight.
 
 ## Установка
 
@@ -117,9 +94,26 @@ NOTICE
 git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
 cd cursor-hindsight-ondemand
 .\install.ps1
+```
+
+Скрипты попадут в `%USERPROFILE%\.hindsight`. Примеры конфигов Cursor (существующие файлы не перезаписываются):
+
+```powershell
 .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson
 ```
 
-Дальше: локальный URL в `cursor.json`, убрать автозагрузку Windows, перезагрузить Cursor.
+Дальше: локальный URL в `cursor.json`, убрать старый ярлык из автозагрузки Windows, перезагрузить Cursor.
 
-Известный баг upstream: иногда нет `rules_file.py` — скопируйте файл из официальной Cursor-интеграции Hindsight.
+## Структура
+
+```text
+scripts/          обёртки для ~/.hindsight
+examples/         образцы hooks.json, mcp.json, cursor.json
+install.ps1       копирование скриптов
+LICENSE           MIT
+NOTICE            сторонние компоненты
+```
+
+## Лицензия
+
+MIT — [LICENSE](LICENSE). Стороннее ПО, которое ставится отдельно, перечислено в [NOTICE](NOTICE).
