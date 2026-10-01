@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "python \"C:\\\\Users\\\\YOU\\\\.hindsight\\\\session-start-with-ensure.py\"",
+        "timeout": 180
+      }
+    ],
+    "stop": [
+      {
+        "command": "python \"C:\\\\Users\\\\YOU\\\\.hindsight\\\\plugin-host\\\\.cursor-plugin\\\\hindsight-memory\\\\scripts\\\\retain.py\"",
+        "timeout": 60
+      }
+    ]
+  }
+}

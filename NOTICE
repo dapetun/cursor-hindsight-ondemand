@@ -1,0 +1,25 @@
+Third-party software
+====================
+
+This repository contains only original wrapper scripts and documentation.
+It does not redistribute Hindsight, mcp-remote, Cursor, or other products.
+Those components remain under their own licenses when you install them.
+
+Hindsight (vectorize-io/hindsight, including hindsight-embed)
+  License: MIT
+  Copyright (c) Vectorize AI, Inc.
+  https://github.com/vectorize-io/hindsight
+
+mcp-remote (npm)
+  License: MIT
+  https://www.npmjs.com/package/mcp-remote
+
+Cursor IDE
+  Proprietary product of Anysphere. Not redistributed here.
+  https://cursor.com
+
+Not included in this repository
+-------------------------------
+GitNexus is unrelated optional tooling some setups use for code graphs.
+It is licensed under PolyForm Noncommercial 1.0.0 and is intentionally
+omitted so this wrapper can stay MIT without mixing noncommercial terms.

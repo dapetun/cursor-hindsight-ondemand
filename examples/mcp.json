@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "hindsight": {
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\Users\\REPLACE_ME\\.hindsight\\mcp-launch.ps1"
+      ]
+    }
+  }
+}

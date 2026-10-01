@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+ensure-daemon.lock
+*.pyc
+__pycache__/
+.venv/
+node_modules/
