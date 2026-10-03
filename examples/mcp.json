@@ -7,7 +7,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "C:\\Users\\REPLACE_ME\\.hindsight\\mcp-launch.ps1"
+        "C:\\Users\\YOU\\.hindsight\\mcp-launch.ps1"
       ]
     }
   }

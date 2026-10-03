@@ -71,6 +71,38 @@ Then:
 
 Manual path: copy `scripts/*` into `~/.hindsight` and merge `examples/` into `~/.cursor` / `~/.hindsight` as needed.
 
+## Used with Cursor Model Orchestrator (stack profile)
+
+This repo is the **local Hindsight lifecycle** for Cursor (ensure-daemon / sessionStart / mcp-launch). It is **not** a model router.
+
+The paired project [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) (MIT) ships a Cursor skill with two install profiles:
+
+| Profile | What you get |
+|--------|----------------|
+| `core` | Model routing skill only (no Hindsight / GitNexus) |
+| `stack` | Same skill + soft deps: Hindsight retain via **this** repo, optional GitNexus (upstream, not vendored here) |
+
+**Stack install order**
+
+1. **Orchestrator (stack)** — from [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator):
+
+   ```powershell
+   pwsh -File .\scripts\install_skill.ps1 -Profile stack
+   ```
+
+2. **This repo** — clone + wrappers (+ optional hooks/MCP examples):
+
+   ```powershell
+   git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
+   cd cursor-hindsight-ondemand
+   .\install.ps1
+   .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson   # optional
+   ```
+
+3. **GitNexus (optional)** — install separately from upstream; not part of this repository.
+
+**Orchestrator stack expects:** MCP server name `hindsight` (see `examples/mcp.json`) and `"hindsightApiUrl": "http://127.0.0.1:9077"`. Details: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) and orchestrator `docs/integrations/stack.md`.
+
 ## FAQ
 
 ### Does this replace Hindsight?
@@ -97,7 +129,8 @@ No. This repo is only the on-demand Hindsight lifecycle for Cursor.
 
 ```text
 scripts/     ensure-daemon, start-daemon, mcp-launch, session-start wrapper
-examples/    sample Cursor / Hindsight JSON
+examples/    sample Cursor / Hindsight JSON (+ README notes)
+docs/        integrations boundary (orchestrator stack, out-of-scope)
 install.ps1  installer
 llms.txt     short summary for AI tools
 LICENSE      MIT
@@ -140,6 +173,25 @@ cd cursor-hindsight-ondemand
 ```
 
 Уберите ярлык из Startup, проверьте локальный URL, перезагрузите Cursor.
+
+## Используется с Cursor Model Orchestrator (профиль stack)
+
+Этот репозиторий — **lifecycle локального Hindsight** для Cursor (ensure-daemon / sessionStart / mcp-launch), а **не** роутер моделей.
+
+Парный проект [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) (MIT) ставит skill с двумя профилями:
+
+| Профиль | Что даёт |
+|--------|----------|
+| `core` | Только skill роутинга моделей |
+| `stack` | Тот же skill + soft-deps: Hindsight retain через **этот** репо, опционально GitNexus (upstream, не здесь) |
+
+**Порядок установки stack**
+
+1. **Orchestrator:** `pwsh -File .\scripts\install_skill.ps1 -Profile stack`
+2. **Этот репо:** `.\install.ps1` (+ опционально `-WriteHooks -WriteMcp -WriteCursorJson`)
+3. **GitNexus (опционально)** — отдельно, не входит в этот репозиторий
+
+**Ожидания orchestrator stack:** MCP-сервер с именем `hindsight` и `"hindsightApiUrl": "http://127.0.0.1:9077"`. Подробнее: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 ## Частые вопросы
 

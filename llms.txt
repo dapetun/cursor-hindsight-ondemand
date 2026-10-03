@@ -4,9 +4,12 @@
 
 This project starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud.
 
+Pairs with [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile (soft Hindsight retain via MCP server name `hindsight`); this repo is lifecycle only, not the model router.
+
 ## Docs
 
-- [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): install, how it works, FAQ
+- [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): install, how it works, FAQ, orchestrator stack
+- [INTEGRATIONS](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/INTEGRATIONS.md): in-scope vs out-of-scope (GitNexus, routing YAML)
 - [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
 - [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
 
@@ -14,7 +17,8 @@ This project starts `hindsight-embed` only when a Cursor agent session or MCP to
 
 - Hindsight: https://github.com/vectorize-io/hindsight
 - Cursor: https://cursor.com
+- Cursor Model Orchestrator (stack partner): https://github.com/dapetun/cursor-model-orchestrator
 
 ## Not included
 
-GitNexus and other code-graph tools are out of scope. This repo only covers on-demand Hindsight lifecycle wrappers for Cursor.
+GitNexus, model-routing YAML, and the `model-orchestrator` skill are out of scope. This repo only covers on-demand Hindsight lifecycle wrappers for Cursor.
