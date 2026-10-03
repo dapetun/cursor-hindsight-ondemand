@@ -1,6 +1,8 @@
 # On-demand local Hindsight memory for Cursor (Windows)
 
-**Last updated:** 2026-10-03 · **License:** [MIT](LICENSE) · **OS:** Windows · **Partner:** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) ([v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0))
+**Last updated:** 2026-10-03 · **License:** [MIT](LICENSE) · **OS:** Windows · **Release:** [v1.0.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0)
+
+**Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
 **cursor-hindsight-ondemand** starts the local [Hindsight](https://github.com/vectorize-io/hindsight) memory daemon only when Cursor agent work needs it — not when Windows boots. It wires Cursor `sessionStart` hooks and MCP so recall/retain stay on `127.0.0.1`, without leaving `hindsight-embed` in Startup all day.
 
@@ -46,10 +48,10 @@ It does **not** replace Hindsight, Cursor, or a model router. Pair with [cursor-
 |--------|------|
 | `ensure-daemon.ps1` | Idempotent health check + local start |
 | `session-start-with-ensure.py` | Cursor `sessionStart` → ensure → official recall |
-| `mcp-launch.mjs` | **Preferred** MCP entry: ensure → `mcp-remote` → local Hindsight MCP (used by `examples/mcp.json` via `node`) |
-| `mcp-launch.ps1` | Legacy PowerShell wrapper; prefers calling `mcp-launch.mjs` when present |
-| `install.ps1` | Copies wrappers into `~/.hindsight` |
-| `examples/` | Sample `hooks.json`, `mcp.json`, `cursor.json` |
+| `mcp-launch.mjs` | **Preferred** Cursor MCP entry (`node`): ensure → `mcp-remote` → local Hindsight (hides console windows) |
+| `mcp-launch.ps1` | Legacy PowerShell launcher; thin wrapper that calls `mcp-launch.mjs` |
+| `install.ps1` | Copies wrappers into `~/.hindsight` (writes `node …/mcp-launch.mjs` when `-WriteMcp`) |
+| `examples/` | Sample `hooks.json`, `mcp.json` (uses `mcp-launch.mjs`), `cursor.json` |
 
 This repository is glue only. You still install Hindsight and Cursor yourself. It does not redistribute those products.
 
@@ -143,7 +145,7 @@ No. It only starts and waits for your local Hindsight daemon when Cursor needs i
 
 ### Do I need cursor-model-orchestrator?
 
-**No** if you only want on-demand local Hindsight memory for Cursor. **Yes (stack profile)** if you also want the recommend-only model router to lean-log routes via Hindsight MCP (`hindsight`). Orchestrator [core](https://github.com/dapetun/cursor-model-orchestrator) works without this repo.
+**No** for memory-only (this repo alone). **Yes (stack profile)** if you want lean route retain from the router skill via Hindsight MCP (`hindsight`) — install orchestrator with `-Profile stack`, then this repo. Orchestrator [core](https://github.com/dapetun/cursor-model-orchestrator) works without this repo.
 
 ### How do I stop Hindsight from starting at Windows login?
 
@@ -180,7 +182,7 @@ No. This repo is only the on-demand Hindsight lifecycle for Cursor. Install GitN
 ## Repository layout
 
 ```text
-scripts/     ensure-daemon, start-daemon, mcp-launch, session-start wrapper
+scripts/     ensure-daemon, start-daemon, mcp-launch.mjs (+ legacy .ps1), session-start wrapper
 examples/    sample Cursor / Hindsight JSON (+ README notes)
 docs/        integrations boundary (orchestrator stack, out-of-scope)
 install.ps1  installer
@@ -197,7 +199,9 @@ MIT — see [LICENSE](LICENSE). Third-party software you install separately is l
 
 # Локальная память Hindsight для Cursor по требованию (Windows)
 
-**Обновлено:** 2026-10-03 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows
+**Обновлено:** 2026-10-03 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows · **Релиз:** [v1.0.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0)
+
+**Парный проект (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
 **cursor-hindsight-ondemand** поднимает локальный демон [Hindsight](https://github.com/vectorize-io/hindsight) только когда нужна агентская работа в Cursor — не при входе в Windows. Хуки `sessionStart` и MCP держат recall/retain на `127.0.0.1`, без постоянного `hindsight-embed` в автозагрузке.
 
@@ -271,7 +275,7 @@ cd cursor-hindsight-ondemand
 
 ### Нужен ли cursor-model-orchestrator?
 
-**Нет**, если нужна только on-demand память Hindsight. **Да (профиль stack)**, если роутер моделей должен писать lean-логи через MCP `hindsight`. Профиль [core](https://github.com/dapetun/cursor-model-orchestrator) работает без этого репо.
+**Нет** для только памяти (этот репо). **Да (профиль stack)**, если роутер должен писать lean-логи через MCP `hindsight` — сначала orchestrator `-Profile stack`, затем этот `install.ps1`. Профиль [core](https://github.com/dapetun/cursor-model-orchestrator) работает без этого репо.
 
 ### Как убрать Hindsight из автозагрузки Windows?
 

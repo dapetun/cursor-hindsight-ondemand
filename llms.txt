@@ -6,16 +6,28 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 
 **Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon.  
 **Do not use this repo for:** model routing YAML, or GitNexus code graphs.  
-**Pair with:** public [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile for soft Hindsight `retain` (MCP server name `hindsight`). This repo is lifecycle only, not the model router.
+**Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — install `-Profile stack` for soft Hindsight `retain`. This repo is lifecycle only, not the model router.
+
+## Canon (orchestrator stack)
+
+| Setting | Value |
+|---------|--------|
+| MCP server name | `hindsight` |
+| Local API URL | `http://127.0.0.1:9077` |
+| Preferred MCP launcher | `node ~/.hindsight/mcp-launch.mjs` (legacy: `mcp-launch.ps1`) |
+
+## Partner docs
+
+- Orchestrator README: https://github.com/dapetun/cursor-model-orchestrator#readme
+- Stack install order: https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md
+- Orchestrator llms.txt: https://github.com/dapetun/cursor-model-orchestrator/blob/main/llms.txt
+- Orchestrator release: https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0
 
 ## Quick facts
 
-- Platform: Windows + PowerShell (+ Python hooks, Node/`npx` for MCP)
-- Local API: `http://127.0.0.1:9077` (`hindsightApiUrl` must stay local)
-- MCP server name for stack: `hindsight`
-- MCP entry: prefer `mcp-launch.mjs` via `node` (`examples/mcp.json`); `mcp-launch.ps1` is legacy and delegates to `.mjs` when present
+- Platform: Windows + PowerShell (+ Python hooks, Node for MCP)
 - Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
-- License: MIT
+- License: MIT · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0
 
 ## Install
 
@@ -32,13 +44,6 @@ cd cursor-hindsight-ondemand
 - [INTEGRATIONS](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/INTEGRATIONS.md): in-scope vs out-of-scope
 - [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
 - [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
-
-## Partner (orchestrator — public)
-
-- README: https://github.com/dapetun/cursor-model-orchestrator#readme
-- Stack install: https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md
-- Partner llms.txt: https://github.com/dapetun/cursor-model-orchestrator/blob/main/llms.txt
-- Release: https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0
 
 ## Upstream
 
