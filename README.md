@@ -1,14 +1,44 @@
 # On-demand local Hindsight memory for Cursor (Windows)
 
+**Last updated:** 2026-10-03 · **License:** [MIT](LICENSE) · **OS:** Windows
+
 **cursor-hindsight-ondemand** starts the local [Hindsight](https://github.com/vectorize-io/hindsight) memory daemon only when Cursor agent work needs it — not when Windows boots. It wires Cursor `sessionStart` hooks and MCP so recall/retain stay on `127.0.0.1`, without leaving `hindsight-embed` in Startup all day.
 
 > **In short:** If you use Hindsight with Cursor on Windows and hate an always-on daemon, install these wrappers. They check `/health`, start the daemon when an agent chat or MCP tools need it, wait until it is ready, then run the official recall path — still bound to localhost so a cold start does not fall through to Hindsight Cloud.
+
+## What is cursor-hindsight-ondemand?
+
+cursor-hindsight-ondemand is a small set of Windows wrappers that start local Hindsight (`hindsight-embed`) on demand for Cursor. It runs ensure → wait → official `sessionStart` / MCP paths against `http://127.0.0.1:9077`, so agent memory stays local and idle RAM stays free when Cursor is not using memory tools.
+
+It does **not** replace Hindsight, Cursor, or a model router. Pair with [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** when you also want cost-aware model recommendations plus soft Hindsight retain.
+
+## Contents
+
+- [Who this is for](#who-this-is-for)
+- [What you get](#what-you-get)
+- [How it works](#how-it-works)
+- [Install](#install)
+- [Used with Cursor Model Orchestrator (stack profile)](#used-with-cursor-model-orchestrator-stack-profile)
+- [FAQ](#faq)
+- [Related projects](#related-projects)
+- [License](#license)
+- [Русская версия](#локальная-память-hindsight-для-cursor-по-требованию-windows)
 
 ## Who this is for
 
 - Cursor users who want **cross-chat agent memory** via local Hindsight
 - People who previously put `hindsight-embed` in **Windows Startup** and want that gone
 - Setups that must stay on **`http://127.0.0.1:9077`** (no silent cloud API)
+- Orchestrator **stack** users who need the Hindsight MCP lifecycle this skill soft-depends on
+
+### When not to use this
+
+| Situation | Prefer instead |
+|-----------|----------------|
+| You only want model routing (`/eco`, `/max`, `[route]`) | [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **core** profile |
+| You need a code-intelligence graph / impact analysis | Upstream GitNexus (not this repo) |
+| You are fine with Hindsight in Windows Startup 24/7 | Official Hindsight install alone |
+| You want macOS or Linux wrappers | Out of scope here (Windows only) |
 
 ## What you get
 
@@ -34,10 +64,11 @@ After idle, first readiness is typically **40–120 seconds** (models + DB). Set
 
 ### Compared to Windows Startup
 
-| Approach | When the daemon runs | RAM when idle |
-|----------|----------------------|---------------|
-| Startup shortcut / logon script | From Windows login | Always on |
-| **This repo** | When Cursor agent/MCP needs memory | Off between sessions |
+| Approach | When the daemon runs | RAM when idle | Cloud risk if misconfigured |
+|----------|----------------------|---------------|-----------------------------|
+| Startup shortcut / logon script | From Windows login | Always on | Low if URL is local |
+| **This repo (on-demand)** | When Cursor agent/MCP needs memory | Off between sessions | Low if `hindsightApiUrl` stays `127.0.0.1:9077` |
+| Hosted / non-local API URL | Depends on product | N/A | Memory can leave the machine |
 
 ## Requirements
 
@@ -109,21 +140,37 @@ The paired project [cursor-model-orchestrator](https://github.com/dapetun/cursor
 
 No. It only starts and waits for your local Hindsight daemon when Cursor needs it, then calls the official plugin scripts.
 
+### How do I stop Hindsight from starting at Windows login?
+
+Install this repo’s wrappers, remove any `Startup` shortcut or logon task that launches `hindsight-embed`, then reload Cursor so `sessionStart` / MCP use `ensure-daemon` instead.
+
 ### Will memory go to the cloud?
 
 Not if `hindsightApiUrl` stays on `127.0.0.1:9077`. That explicit local URL is the intended setup for this wrapper.
+
+### What MCP server name should Cursor Model Orchestrator use?
+
+Use **`hindsight`**. That is the name in `examples/mcp.json` and the value orchestrator stack reads as `hindsight.mcp_server`.
 
 ### Does it work on macOS or Linux?
 
 The scripts target Windows PowerShell and `npx.cmd`. Ports to other OS are out of scope for now.
 
-### Why is the first chat slow?
+### Why is the first chat slow after idle?
 
-Cold start loads the embed stack. Warm calls are fast. Raise `sessionStart` timeout to 180 seconds for the first agent session after idle.
+Cold start loads the embed stack (typically 40–120 seconds). Warm calls are fast. Raise `sessionStart` timeout to 180 seconds for the first agent session after idle.
 
 ### Is GitNexus included?
 
-No. This repo is only the on-demand Hindsight lifecycle for Cursor.
+No. This repo is only the on-demand Hindsight lifecycle for Cursor. Install GitNexus separately if you want code-graph tools.
+
+## Related projects
+
+| Project | Role |
+|---------|------|
+| [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Upstream local memory product (`hindsight-embed`) |
+| [dapetun/cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) | Cost-aware Cursor model routing; **stack** soft-deps on this repo |
+| [GitNexus](https://github.com/abhigyanpatwari/GitNexus) | Optional code intelligence (not vendored here) |
 
 ## Repository layout
 
@@ -145,15 +192,33 @@ MIT — see [LICENSE](LICENSE). Third-party software you install separately is l
 
 # Локальная память Hindsight для Cursor по требованию (Windows)
 
+**Обновлено:** 2026-10-03 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows
+
 **cursor-hindsight-ondemand** поднимает локальный демон [Hindsight](https://github.com/vectorize-io/hindsight) только когда нужна агентская работа в Cursor — не при входе в Windows. Хуки `sessionStart` и MCP держат recall/retain на `127.0.0.1`, без постоянного `hindsight-embed` в автозагрузке.
 
 > **Коротко:** пользуетесь Hindsight с Cursor на Windows и не хотите демон 24/7 — поставьте эти обёртки. Они проверяют `/health`, стартуют демон для агентского чата или MCP, ждут готовности и вызывают официальный recall, оставаясь на localhost.
+
+## Что это такое?
+
+cursor-hindsight-ondemand — обёртки Windows, которые стартуют локальный Hindsight по требованию для Cursor. Путь: ensure → ожидание → официальный `sessionStart` / MCP на `http://127.0.0.1:9077`. Память остаётся локальной; между сессиями демон не обязан держать RAM.
+
+Это **не** замена Hindsight и **не** роутер моделей. Для роутинга + soft retain смотрите [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) профиль **stack**.
 
 ## Кому это нужно
 
 - Нужна **память между чатами** через локальный Hindsight
 - Раньше демон сидел в **автозагрузке Windows** — хотите убрать
 - Важно не уехать в **облачный API** Hindsight
+- Ставите orchestrator **stack** и нужен lifecycle Hindsight MCP
+
+### Когда не нужно
+
+| Ситуация | Лучше взять |
+|----------|-------------|
+| Только роутинг моделей | orchestrator профиль **core** |
+| Граф кода / impact | upstream GitNexus |
+| Демон в Startup устраивает | только официальный Hindsight |
+| macOS / Linux | вне scope этого репо |
 
 ## Как работает
 
@@ -195,10 +260,41 @@ cd cursor-hindsight-ondemand
 
 ## Частые вопросы
 
-**Это замена Hindsight?** Нет, только старт по требованию и вызов официальных скриптов.  
-**Уйдёт ли память в облако?** Нет, если URL остаётся `127.0.0.1:9077`.  
-**macOS/Linux?** Сейчас только Windows.  
-**GitNexus?** Не входит в этот репозиторий.
+### Это замена Hindsight?
+
+Нет. Только старт по требованию и вызов официальных скриптов.
+
+### Как убрать Hindsight из автозагрузки Windows?
+
+Поставьте обёртки из этого репо, удалите ярлык/задачу Startup для `hindsight-embed`, перезагрузите Cursor.
+
+### Уйдёт ли память в облако?
+
+Нет, если `hindsightApiUrl` остаётся `http://127.0.0.1:9077`.
+
+### Какое имя MCP-сервера ждёт orchestrator stack?
+
+**`hindsight`** — как в `examples/mcp.json`.
+
+### macOS или Linux?
+
+Сейчас только Windows.
+
+### Почему первый чат после простоя медленный?
+
+Холодный старт embed-стека (обычно 40–120 с). Таймаут `sessionStart` — 180.
+
+### GitNexus входит в репо?
+
+Нет. Ставьте отдельно, если нужен граф кода.
+
+## Связанные проекты
+
+| Проект | Роль |
+|--------|------|
+| [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Upstream-память |
+| [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) | Роутинг моделей; stack soft-deps на этот репо |
+| [GitNexus](https://github.com/abhigyanpatwari/GitNexus) | Опциональный code intelligence |
 
 ## Лицензия
 

@@ -2,14 +2,33 @@
 
 > On-demand local Hindsight memory daemon for Cursor on Windows.
 
-This project starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud.
+cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud.
 
-Pairs with [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile (soft Hindsight retain via MCP server name `hindsight`); this repo is lifecycle only, not the model router.
+**Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon.  
+**Do not use this repo for:** model routing YAML, or GitNexus code graphs.  
+**Pair with:** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile for soft Hindsight `retain` (MCP server name `hindsight`). This repo is lifecycle only, not the model router.
+
+## Quick facts
+
+- Platform: Windows + PowerShell (+ Python hooks, Node/`npx` for MCP)
+- Local API: `http://127.0.0.1:9077` (`hindsightApiUrl` must stay local)
+- MCP server name for stack: `hindsight`
+- Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
+- License: MIT
+
+## Install
+
+```powershell
+git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
+cd cursor-hindsight-ondemand
+.\install.ps1
+.\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson   # optional examples
+```
 
 ## Docs
 
-- [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): install, how it works, FAQ, orchestrator stack
-- [INTEGRATIONS](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/INTEGRATIONS.md): in-scope vs out-of-scope (GitNexus, routing YAML)
+- [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): definition, install, FAQ, orchestrator stack (EN+RU)
+- [INTEGRATIONS](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/INTEGRATIONS.md): in-scope vs out-of-scope
 - [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
 - [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
 

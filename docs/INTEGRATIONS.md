@@ -1,6 +1,8 @@
 # Integrations boundary
 
-This repository is **glue for on-demand local Hindsight** on Windows Cursor. It does not ship a model router or a code-intelligence graph.
+**cursor-hindsight-ondemand** is glue for on-demand local Hindsight on Windows Cursor: ensure-daemon, `sessionStart`, and MCP launch against `http://127.0.0.1:9077`. It does not ship a model router or a code-intelligence graph.
+
+Last updated: 2026-10-03.
 
 ## What is in scope
 
