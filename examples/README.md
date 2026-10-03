@@ -18,7 +18,7 @@ See `cursor.json` in this folder.
 
 Cursor Model Orchestrator **stack** profile expects the MCP server key **`hindsight`** (orchestrator `integrations.yaml` → `hindsight.mcp_server`).
 
-`mcp.json` in this folder already uses that name. Rename only if you also change the orchestrator config.
+`mcp.json` in this folder already uses that name and launches **`mcp-launch.mjs`** via `node` (preferred). `mcp-launch.ps1` is legacy. Rename the MCP key only if you also change the orchestrator config.
 
 ## Placeholders
 

@@ -6,13 +6,14 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 
 **Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon.  
 **Do not use this repo for:** model routing YAML, or GitNexus code graphs.  
-**Pair with:** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile for soft Hindsight `retain` (MCP server name `hindsight`). This repo is lifecycle only, not the model router.
+**Pair with:** public [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** profile for soft Hindsight `retain` (MCP server name `hindsight`). This repo is lifecycle only, not the model router.
 
 ## Quick facts
 
 - Platform: Windows + PowerShell (+ Python hooks, Node/`npx` for MCP)
 - Local API: `http://127.0.0.1:9077` (`hindsightApiUrl` must stay local)
 - MCP server name for stack: `hindsight`
+- MCP entry: prefer `mcp-launch.mjs` via `node` (`examples/mcp.json`); `mcp-launch.ps1` is legacy and delegates to `.mjs` when present
 - Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
 - License: MIT
 
@@ -32,11 +33,17 @@ cd cursor-hindsight-ondemand
 - [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
 - [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
 
+## Partner (orchestrator — public)
+
+- README: https://github.com/dapetun/cursor-model-orchestrator#readme
+- Stack install: https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md
+- Partner llms.txt: https://github.com/dapetun/cursor-model-orchestrator/blob/main/llms.txt
+- Release: https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0
+
 ## Upstream
 
 - Hindsight: https://github.com/vectorize-io/hindsight
 - Cursor: https://cursor.com
-- Cursor Model Orchestrator (stack partner): https://github.com/dapetun/cursor-model-orchestrator
 
 ## Not included
 

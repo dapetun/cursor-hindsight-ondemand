@@ -10,7 +10,8 @@ Last updated: 2026-10-03.
 |--------|------|
 | `ensure-daemon.ps1` / `start-daemon.ps1` | Health check + local `hindsight-embed` start |
 | `session-start-with-ensure.py` | Cursor `sessionStart` → ensure → official recall |
-| `mcp-launch.ps1` | Ensure → `mcp-remote` → local Hindsight MCP |
+| `mcp-launch.mjs` | Preferred MCP entry (ensure → `mcp-remote`); used by `examples/mcp.json` |
+| `mcp-launch.ps1` | Legacy launcher; calls `mcp-launch.mjs` when present |
 | `install.ps1` + `examples/` | Install wrappers; sample hooks / MCP / `cursor.json` |
 
 Local API must stay at **`http://127.0.0.1:9077`** (`hindsightApiUrl` in `~/.hindsight/cursor.json`).
@@ -46,3 +47,5 @@ Orchestrator install profiles:
 3. GitNexus (optional), separately from upstream
 
 If retain MCP is missing, orchestrator stack skips logging and continues routing — that is intentional soft-dep behavior, not a failure of this repo.
+
+Mirror docs on the partner side: [orchestrator stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md) and [orchestrator llms.txt](https://github.com/dapetun/cursor-model-orchestrator/blob/main/llms.txt).
