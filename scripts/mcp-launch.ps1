@@ -1,4 +1,4 @@
-# Cursor MCP launcher: ensure local Hindsight daemon, then stdio-proxy to it.
+# Legacy PowerShell MCP launcher (may show a console). Prefer mcp-launch.mjs via node.
 $ErrorActionPreference = "Stop"
 
 $userLocalBin = Join-Path $env:USERPROFILE ".local\bin"
@@ -6,9 +6,20 @@ $npmRoaming = Join-Path $env:APPDATA "npm"
 $nodeDir = Join-Path ${env:ProgramFiles} "nodejs"
 $env:PATH = (@($userLocalBin, $npmRoaming, $nodeDir, $env:PATH) -join ";")
 
+$mjs = Join-Path $PSScriptRoot "mcp-launch.mjs"
+if (Test-Path -LiteralPath $mjs) {
+    $node = Get-Command "node.exe" -ErrorAction SilentlyContinue
+    if (-not $node) { $node = Get-Command "node" -ErrorAction SilentlyContinue }
+    if (-not $node) { throw "node not found. Install Node.js." }
+    & $node.Source $mjs
+    exit $LASTEXITCODE
+}
+
 $ensure = Join-Path $PSScriptRoot "ensure-daemon.ps1"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ensure -WaitSeconds 150
-if ($LASTEXITCODE -ne 0) {
+$p = Start-Process -FilePath "powershell.exe" `
+    -ArgumentList @("-NoLogo", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", $ensure, "-WaitSeconds", "150") `
+    -Wait -PassThru -WindowStyle Hidden
+if ($p.ExitCode -ne 0) {
     Write-Error "hindsight MCP: local daemon not ready on 127.0.0.1:9077"
     exit 1
 }

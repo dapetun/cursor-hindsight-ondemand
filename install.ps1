@@ -22,6 +22,7 @@ foreach ($name in @(
     "ensure-daemon.ps1",
     "start-daemon.ps1",
     "mcp-launch.ps1",
+    "mcp-launch.mjs",
     "session-start-with-ensure.py"
 )) {
     Copy-Item -LiteralPath (Join-Path $scriptsSrc $name) -Destination (Join-Path $dest $name) -Force
@@ -63,16 +64,12 @@ if ($WriteHooks) {
 
 if ($WriteMcp) {
     $mcpPath = Join-Path $cursorDir "mcp.json"
-    $launch = Join-Path $dest "mcp-launch.ps1"
+    $launch = Join-Path $dest "mcp-launch.mjs"
     $mcpObj = [ordered]@{
         mcpServers = [ordered]@{
             hindsight = [ordered]@{
-                command = "powershell.exe"
+                command = "node"
                 args = @(
-                    "-NoProfile",
-                    "-ExecutionPolicy",
-                    "Bypass",
-                    "-File",
                     $launch
                 )
             }

@@ -1,13 +1,9 @@
 {
   "mcpServers": {
     "hindsight": {
-      "command": "powershell.exe",
+      "command": "node",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "C:\\Users\\YOU\\.hindsight\\mcp-launch.ps1"
+        "C:\\Users\\YOU\\.hindsight\\mcp-launch.mjs"
       ]
     }
   }
