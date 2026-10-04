@@ -31,7 +31,7 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 
 - Platform: Windows + PowerShell (+ Python hooks, Node for MCP)
 - Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
-- License: MIT · DCO for contributions · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0
+- License: MIT · DCO for contributions · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0
 
 ## Install
 

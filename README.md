@@ -1,6 +1,6 @@
 # On-demand local Hindsight memory for Cursor (Windows)
 
-**Last updated:** 2026-10-04 · **License:** [MIT](LICENSE) · **OS:** Windows · **Release:** [v1.0.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0)
+**Last updated:** 2026-10-04 · **License:** [MIT](LICENSE) · **OS:** Windows · **Release:** [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0)
 
 **Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
@@ -270,7 +270,7 @@ MIT — see [LICENSE](LICENSE). Third-party software you install separately is l
 
 # Локальная память Hindsight для Cursor по требованию (Windows)
 
-**Обновлено:** 2026-10-04 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows · **Релиз:** [v1.0.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0)
+**Обновлено:** 2026-10-04 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows · **Релиз:** [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0)
 
 **Парный проект (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
