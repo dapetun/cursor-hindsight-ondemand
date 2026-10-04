@@ -2,11 +2,13 @@
 
 > On-demand local Hindsight memory daemon for Cursor on Windows.
 
-cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud.
+cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud. `ensure-daemon.ps1` refuses non-loopback BaseUrl unless `-AllowNonLocal` is set.
 
-**Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon.  
-**Do not use this repo for:** model routing YAML, or GitNexus code graphs.  
+**Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon; optionally a localhost hub linking official Hindsight UI + GitNexus web.  
+**Do not use this repo for:** model routing YAML, or vendoring GitNexus itself.  
 **Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — install `-Profile stack` for soft Hindsight `retain`. This repo is lifecycle only, not the model router.
+
+**Privacy:** local HTTP API ≠ no LLM egress. Hindsight embed / Cursor may still send session text to configured providers. See docs/PRIVACY.md. Default example retain pacing: `retainEveryNTurns: 5` (`examples/cursor.json`); aggressive: `examples/cursor.full-retain.json`.
 
 ## Canon (orchestrator stack)
 
@@ -15,6 +17,8 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 | MCP server name | `hindsight` |
 | Local API URL | `http://127.0.0.1:9077` |
 | Preferred MCP launcher | `node ~/.hindsight/mcp-launch.mjs` (legacy: `mcp-launch.ps1`) |
+| Dashboards skill | `memory-graph-dashboards` (no auto-start) |
+| Hub / Memory UI / Control / GitNexus | `8765` / `19077` / `7878` / `4747` (loopback) |
 
 ## Partner docs
 
@@ -27,7 +31,7 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 
 - Platform: Windows + PowerShell (+ Python hooks, Node for MCP)
 - Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
-- License: MIT · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0
+- License: MIT · DCO for contributions · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.0.0
 
 ## Install
 
@@ -41,6 +45,10 @@ cd cursor-hindsight-ondemand
 ## Docs
 
 - [README](https://github.com/dapetun/cursor-hindsight-ondemand#readme): definition, install, FAQ, orchestrator stack (EN+RU)
+- [PRIVACY](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/PRIVACY.md): data layers, wipe, RF/GDPR signposts
+- [COMPLIANCE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/COMPLIANCE.md): adopter checklist
+- [SECURITY](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/SECURITY.md): vulnerability reporting
+- [CONTRIBUTING](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/CONTRIBUTING.md) / [DCO](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/DCO)
 - [INTEGRATIONS](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/docs/INTEGRATIONS.md): in-scope vs out-of-scope
 - [LICENSE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/LICENSE): MIT
 - [NOTICE](https://github.com/dapetun/cursor-hindsight-ondemand/blob/main/NOTICE): third-party attributions
@@ -50,6 +58,14 @@ cd cursor-hindsight-ondemand
 - Hindsight: https://github.com/vectorize-io/hindsight
 - Cursor: https://cursor.com
 
+## Dashboards (optional)
+
+```powershell
+powershell -NoProfile -File $env:USERPROFILE\.hindsight\dashboard\start-dashboards.ps1 -Open
+```
+
+Installs with `install.ps1` into `~/.hindsight/dashboard` + `~/.cursor/skills/memory-graph-dashboards`. Does not start UIs until asked. See dashboard/README.md.
+
 ## Not included
 
-GitNexus, model-routing YAML, and the `model-orchestrator` skill are out of scope. This repo only covers on-demand Hindsight lifecycle wrappers for Cursor.
+GitNexus product binaries, model-routing YAML, and the `model-orchestrator` skill are out of scope. This repo covers on-demand Hindsight lifecycle wrappers plus an optional hub that *links* official Hindsight/GitNexus UIs when those tools are installed.

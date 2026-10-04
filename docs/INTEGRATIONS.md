@@ -1,6 +1,6 @@
 # Integrations boundary
 
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-03 (privacy boundary + local-only ensure)
 
 **cursor-hindsight-ondemand** is glue for on-demand local Hindsight on Windows Cursor: ensure-daemon, `sessionStart`, and MCP launch against `http://127.0.0.1:9077`. It does not ship a model router or a code-intelligence graph.
 
@@ -15,8 +15,11 @@ Mirrored with orchestrator [docs/integrations/stack.md](https://github.com/dapet
 | `mcp-launch.mjs` | Preferred MCP entry (`node`): ensure → `mcp-remote` → local Hindsight |
 | `mcp-launch.ps1` | Legacy PowerShell launcher (calls `mcp-launch.mjs`) |
 | `install.ps1` + `examples/` | Install wrappers; sample hooks / MCP / `cursor.json` |
+| `dashboard/` + skill `memory-graph-dashboards` | On-demand local hub linking official Hindsight UI + GitNexus web (does not auto-start) |
 
-Local API must stay at **`http://127.0.0.1:9077`** (`hindsightApiUrl` in `~/.hindsight/cursor.json`).
+Local API must stay at **`http://127.0.0.1:9077`** (`hindsightApiUrl` in `~/.hindsight/cursor.json`). `ensure-daemon.ps1` refuses non-loopback `-BaseUrl` unless `-AllowNonLocal` is passed.
+
+Privacy boundary (local API vs LLM egress): [PRIVACY.md](PRIVACY.md). Org checklist: [COMPLIANCE.md](COMPLIANCE.md).
 
 ## What is out of scope
 
@@ -27,6 +30,21 @@ Local API must stay at **`http://127.0.0.1:9077`** (`hindsightApiUrl` in `~/.hin
 | Official Hindsight product / `hindsight-embed` binary | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) |
 
 This repo does **not** duplicate the `model-orchestrator` skill.
+
+## Memory & Graphs dashboards (optional)
+
+Official UIs already exist; this repo only ships a thin localhost **hub** and a Cursor skill so you do not juggle ports.
+
+| Piece | URL / path |
+|-------|------------|
+| Hub | `http://127.0.0.1:8765` |
+| Hindsight Memory UI | `http://127.0.0.1:19077` (`hindsight-embed -p cursor ui start`) |
+| Hindsight Control | `http://127.0.0.1:7878` |
+| GitNexus Web | `http://127.0.0.1:4747` (`gitnexus serve`) |
+| Skill | `memory-graph-dashboards` → `~/.cursor/skills/…` after `install.ps1` |
+| Scripts | `~/.hindsight/dashboard/start-dashboards.ps1` / `stop-dashboards.ps1` |
+
+**Do not auto-start** these when installing. Start only when the user asks (skill or `-Open`). Stopping dashboards leaves the Hindsight API up for Cursor MCP unless `-AlsoApi`.
 
 ## Pairing with Cursor Model Orchestrator (stack)
 

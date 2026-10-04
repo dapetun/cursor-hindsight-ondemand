@@ -7,7 +7,7 @@
   "llmModel": "gpt-5.6-terra",
   "autoRecall": true,
   "autoRetain": true,
-  "retainEveryNTurns": 5,
+  "retainEveryNTurns": 1,
   "retainMode": "full-session",
   "recallBudget": "mid",
   "recallMaxTokens": 1024,

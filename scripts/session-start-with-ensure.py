@@ -1,6 +1,8 @@
+# SPDX-License-Identifier: MIT
 """Cursor sessionStart wrapper: ensure local Hindsight daemon, then recall.
 
-Keeps memory on http://127.0.0.1:9077 only. Never points at cloud.
+Keeps the Hindsight HTTP API on http://127.0.0.1:9077 only. Never points at cloud.
+Local API does not mean LLM providers never see session text — see docs/PRIVACY.md.
 """
 from __future__ import annotations
 

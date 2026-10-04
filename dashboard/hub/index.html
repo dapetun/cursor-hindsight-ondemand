@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Memory & Graphs — Cursor stack</title>
+  <style>
+    :root {
+      --bg: #141414;
+      --panel: #1c1c1c;
+      --panel-2: #242424;
+      --border: #2f2f2f;
+      --text: #e8e8e8;
+      --muted: #9b9b9b;
+      --accent: #81a1c1;
+      --accent-2: #88c0d0;
+      --good: #a3be8c;
+      --bad: #bf616a;
+      --warn: #ebcb8b;
+      --radius: 12px;
+      --font: "Segoe UI", "SF Pro Text", system-ui, sans-serif;
+      --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1f2a33 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #1a2220 0%, transparent 50%),
+        var(--bg);
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; }
+    header { margin-bottom: 28px; }
+    .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .sub { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 62ch; }
+    .toolbar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 26px;
+    }
+    button, .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button:hover, .btn:hover { border-color: #444; background: #2a2a2a; }
+    button.primary {
+      background: linear-gradient(180deg, #3d5a73, #2f4558);
+      border-color: #4c6a82;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card h2 { margin: 0; font-size: 16px; font-weight: 600; }
+    .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; flex: 1; }
+    .status {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--muted);
+      font-family: var(--mono);
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #555;
+    }
+    .dot.on { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+    .dot.off { background: var(--bad); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .section {
+      margin-top: 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .section h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 8px; border-top: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; border-top: none; }
+    td.mono { font-family: var(--mono); font-size: 12px; color: #c7c7c7; }
+    .empty { color: var(--muted); font-size: 13px; }
+    footer {
+      margin-top: 28px; color: #6f6f6f; font-size: 12px; line-height: 1.5;
+    }
+    code { font-family: var(--mono); font-size: 12px; color: var(--accent-2); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Cursor local stack</p>
+      <h1>Память и графы проектов</h1>
+      <p class="sub">
+        Один вход к локальному Hindsight (долгосрочная память) и GitNexus (граф кода по репозиториям).
+        Официальные UI уже есть — этот hub только связывает их и показывает статус.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <button class="primary" id="btnStart" type="button">Запустить сервисы</button>
+      <button id="btnStop" type="button">Остановить</button>
+      <button id="btnRefresh" type="button">Обновить статус</button>
+      <a class="btn" id="openHubDocs" href="https://github.com/dapetun/cursor-hindsight-ondemand" target="_blank" rel="noreferrer">Репозиторий обёрток</a>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="status"><span class="dot" id="dotMem"></span><span id="stMem">Hindsight…</span></div>
+        <h2>Hindsight — память</h2>
+        <p>Bank <code>cursor</code>: facts, observations, directives, mental models, constellation.</p>
+        <div class="actions">
+          <a class="btn" id="linkMem" href="http://127.0.0.1:19077" target="_blank" rel="noreferrer">Открыть Memory UI</a>
+          <a class="btn" id="linkControl" href="http://127.0.0.1:7878" target="_blank" rel="noreferrer">Control Center</a>
+          <a class="btn" id="linkApi" href="http://127.0.0.1:9077/health" target="_blank" rel="noreferrer">API /health</a>
+        </div>
+        <div class="status"><span class="dot" id="dotCtrl"></span><span id="stCtrl">Control…</span></div>
+      </section>
+
+      <section class="card">
+        <div class="status"><span class="dot" id="dotGraph"></span><span id="stGraph">GitNexus…</span></div>
+        <h2>GitNexus — графы кода</h2>
+        <p>Локальный <code>gitnexus serve</code> отдаёт Web UI и индексы всех зарегистрированных репозиториев.</p>
+        <div class="actions">
+          <a class="btn" id="linkGraph" href="http://127.0.0.1:4747" target="_blank" rel="noreferrer">Открыть Graph UI</a>
+          <a class="btn" id="linkRepos" href="http://127.0.0.1:4747/api/repos" target="_blank" rel="noreferrer">JSON /api/repos</a>
+        </div>
+      </section>
+    </div>
+
+    <section class="section">
+      <h3>Проекты с индексом GitNexus</h3>
+      <div id="repos"><p class="empty">Загрузка…</p></div>
+    </section>
+
+    <footer>
+      Hub: <code>http://127.0.0.1:8765</code> ·
+      Skill: <code>memory-graph-dashboards</code> ·
+      Сервисы поднимаются без видимых окон CMD.
+    </footer>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(dotId, textId, ok, label) {
+      const dot = $(dotId);
+      const text = $(textId);
+      dot.className = "dot " + (ok ? "on" : "off");
+      text.textContent = label;
+    }
+
+    async function refresh() {
+      const res = await fetch("/api/status");
+      const data = await res.json();
+      setStatus("dotMem", "stMem", data.hindsightUi, data.hindsightUi
+        ? `Hindsight UI · ${data.hindsightUiUrl}`
+        : (data.hindsightApi ? "API up, UI down" : "Hindsight offline"));
+      setStatus("dotCtrl", "stCtrl", data.control, data.control
+        ? `Control · ${data.controlUrl}`
+        : "Control offline");
+      setStatus("dotGraph", "stGraph", data.gitnexus, data.gitnexus
+        ? `GitNexus · ${data.gitnexusUrl}`
+        : "GitNexus offline");
+      $("linkMem").href = data.hindsightUiUrl;
+      $("linkControl").href = data.controlUrl || "http://127.0.0.1:7878";
+      $("linkApi").href = data.hindsightApiUrl + "/health";
+      $("linkGraph").href = data.gitnexusUrl;
+      $("linkRepos").href = data.gitnexusUrl.replace(/\/$/, "") + "/api/repos";
+
+      const box = $("repos");
+      if (!data.repos || !data.repos.length) {
+        box.innerHTML = '<p class="empty">Нет индексов или GitNexus ещё не запущен. Нажми «Запустить сервисы».</p>';
+        return;
+      }
+      const rows = data.repos.map((r) => {
+        const stats = r.stats
+          ? `${r.stats.nodes ?? r.stats.files ?? "?"} symbols · ${r.stats.edges ?? "?"} edges`
+          : "—";
+        const when = r.indexedAt ? new Date(r.indexedAt).toLocaleString() : "—";
+        return `<tr>
+          <td><strong>${escapeHtml(r.name || r.path || "?")}</strong></td>
+          <td class="mono">${escapeHtml(r.path || "")}</td>
+          <td>${escapeHtml(stats)}</td>
+          <td>${escapeHtml(when)}</td>
+          <td><a class="btn" href="${data.gitnexusUrl}" target="_blank" rel="noreferrer">Открыть UI</a></td>
+        </tr>`;
+      }).join("");
+      box.innerHTML = `<table>
+        <thead><tr><th>Проект</th><th>Путь</th><th>Граф</th><th>Индекс</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    async function run(action) {
+      $("btnStart").disabled = true;
+      $("btnStop").disabled = true;
+      try {
+        await fetch("/api/" + action, { method: "POST" });
+        await new Promise((r) => setTimeout(r, 1200));
+        await refresh();
+      } finally {
+        $("btnStart").disabled = false;
+        $("btnStop").disabled = false;
+      }
+    }
+
+    $("btnRefresh").onclick = () => refresh();
+    $("btnStart").onclick = () => run("start");
+    $("btnStop").onclick = () => run("stop");
+    refresh();
+    setInterval(refresh, 8000);
+  </script>
+</body>
+</html>

@@ -12,8 +12,16 @@ Hindsight (vectorize-io/hindsight, including hindsight-embed)
 
 mcp-remote (npm)
   License: MIT
+  Pin used by launchers: mcp-remote@0.14.3
   https://www.npmjs.com/package/mcp-remote
 
 Cursor IDE
   Proprietary product of Anysphere. Not redistributed here.
   https://cursor.com
+
+Developer Certificate of Origin
+  The DCO 1.1 text in ./DCO is the standard Linux Foundation DCO document.
+  https://developercertificate.org/
+
+Privacy / security documentation in this repository is engineering guidance,
+not a substitute for Cursor, Hindsight, or LLM-provider privacy terms.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Legacy PowerShell MCP launcher (may show a console). Prefer mcp-launch.mjs via node.
 $ErrorActionPreference = "Stop"
 

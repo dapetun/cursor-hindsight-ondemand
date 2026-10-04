@@ -1,11 +1,39 @@
+# SPDX-License-Identifier: MIT
 # Ensure local Hindsight daemon is healthy on 127.0.0.1:9077.
 # Idempotent: if already up, returns immediately. Never falls back to cloud.
+# Non-local BaseUrl is refused unless -AllowNonLocal (discouraged).
 param(
     [int]$WaitSeconds = 150,
-    [string]$BaseUrl = "http://127.0.0.1:9077"
+    [string]$BaseUrl = "http://127.0.0.1:9077",
+    [switch]$AllowNonLocal
 )
 
 $ErrorActionPreference = "Continue"
+
+function Test-IsLoopbackBaseUrl {
+    param([string]$Url)
+    try {
+        $uri = [Uri]$Url
+        if (-not $uri.IsAbsoluteUri) { return $false }
+        $h = $uri.IdnHost.ToLowerInvariant()
+        return ($h -eq "127.0.0.1" -or $h -eq "localhost" -or $h -eq "::1")
+    } catch {
+        return $false
+    }
+}
+
+if (-not (Test-IsLoopbackBaseUrl -Url $BaseUrl)) {
+    if (-not $AllowNonLocal) {
+        Write-Error @"
+hindsight: refusing non-local BaseUrl '$BaseUrl'.
+This wrapper keeps memory on loopback only. Use http://127.0.0.1:9077
+(or pass -AllowNonLocal if you accept cloud/remote risk - not recommended).
+See docs/PRIVACY.md and SECURITY.md.
+"@
+        exit 2
+    }
+    Write-Warning "hindsight: -AllowNonLocal set; BaseUrl='$BaseUrl' may send memory off-machine."
+}
 
 # Prefer user-local bins without hard-coding a machine username.
 $userLocalBin = Join-Path $env:USERPROFILE ".local\bin"
@@ -66,10 +94,14 @@ try {
         exit 1
     }
 
-    Start-Process -FilePath "powershell.exe" `
-        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $starter) `
-        -WindowStyle Hidden `
-        -WorkingDirectory $lockDir | Out-Null
+    # CreateNoWindow: Windows Terminal must not attach to uv.exe/hindsight-embed consoles.
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "powershell.exe"
+    $psi.Arguments = "-NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$starter`""
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.WorkingDirectory = $lockDir
+    [void][System.Diagnostics.Process]::Start($psi)
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     $deadline = (Get-Date).AddSeconds($WaitSeconds)
