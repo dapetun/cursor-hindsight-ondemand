@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: MIT
-"""Cursor sessionStart wrapper: ensure local Hindsight daemon, then recall.
+"""Cursor sessionStart wrapper: ensure the local Hindsight daemon is up.
 
-Keeps the Hindsight HTTP API on http://127.0.0.1:9077 only. Never points at cloud.
+Does not call official session_start.py. That script auto-recalls memories
+and writes .cursor/rules/hindsight-session.mdc, which duplicates the Continual
+Learning plugin (AGENTS.md: Learned User Preferences, Learned Workspace Facts).
+
+This hook only warms http://127.0.0.1:9077 so explicit MCP tools are ready.
+It never points at Hindsight Cloud.
 Local API does not mean LLM providers never see session text — see docs/PRIVACY.md.
 """
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -14,32 +18,14 @@ from pathlib import Path
 HOME = Path.home()
 HINDSIGHT_DIR = HOME / ".hindsight"
 ENSURE_PS1 = HINDSIGHT_DIR / "ensure-daemon.ps1"
-SESSION_START = (
-    HINDSIGHT_DIR
-    / "plugin-host"
-    / ".cursor-plugin"
-    / "hindsight-memory"
-    / "scripts"
-    / "session_start.py"
-)
 
 # Leave headroom under hooks.json sessionStart timeout (180s).
 ENSURE_WAIT_SECONDS = 150
 
 
-def _augment_path(env: dict) -> dict:
-    extras = [
-        str(HOME / ".local" / "bin"),
-        str(Path(os.environ.get("APPDATA", "")) / "npm"),
-    ]
-    prefix = os.pathsep.join(p for p in extras if p and p != str(Path("")))
-    env = dict(env)
-    env["PATH"] = prefix + os.pathsep + env.get("PATH", "")
-    return env
-
-
 def main() -> int:
-    stdin_data = sys.stdin.buffer.read()
+    # Drain hook stdin so Cursor is not left blocked on the pipe.
+    sys.stdin.buffer.read()
 
     if not ENSURE_PS1.is_file():
         sys.stderr.write(f"hindsight: missing {ENSURE_PS1}\n")
@@ -63,22 +49,7 @@ def main() -> int:
         sys.stderr.write(ensure.stdout)
     if ensure.stderr:
         sys.stderr.write(ensure.stderr)
-
-    # Even if ensure timed out, still run session_start so later turns can work
-    # once the daemon finishes warming; recall may be empty this turn.
-    if not SESSION_START.is_file():
-        sys.stderr.write(
-            f"hindsight: missing plugin script {SESSION_START}\n"
-            "Install the official Hindsight Cursor integration first.\n"
-        )
-        return ensure.returncode or 1
-
-    result = subprocess.run(
-        [sys.executable, str(SESSION_START)],
-        input=stdin_data,
-        env=_augment_path(os.environ),
-    )
-    return result.returncode
+    return ensure.returncode
 
 
 if __name__ == "__main__":

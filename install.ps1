@@ -75,7 +75,8 @@ if (-not $SkipDashboardSkill) {
 if ($WriteHooks) {
     $hooksPath = Join-Path $cursorDir "hooks.json"
     $sessionPy = Join-Path $dest "session-start-with-ensure.py"
-    $retainPy = Join-Path $dest "plugin-host\.cursor-plugin\hindsight-memory\scripts\retain.py"
+    # No stop hook. Continual Learning already mines transcripts into AGENTS.md.
+    # sessionStart only ensures the local daemon; it does not call session_start.py.
     $hooksObj = [ordered]@{
         version = 1
         hooks = [ordered]@{
@@ -83,12 +84,6 @@ if ($WriteHooks) {
                 [ordered]@{
                     command = "python `"$sessionPy`""
                     timeout = 180
-                }
-            )
-            stop = @(
-                [ordered]@{
-                    command = "python `"$retainPy`""
-                    timeout = 60
                 }
             )
         }
@@ -134,12 +129,13 @@ if ($WriteCursorJson) {
 
 Write-Output ""
 Write-Output "Next:"
-Write-Output "  1. Install the official Hindsight Cursor integration so plugin-host scripts exist."
-Write-Output "  2. Point ~/.hindsight/cursor.json at http://127.0.0.1:9077 (never the cloud URL)."
-Write-Output "  3. Remove any Windows Startup entry that starts the daemon at login."
-Write-Output "  4. Reload Cursor so hooks / MCP / skills pick up the new commands."
-Write-Output "  5. Read docs/PRIVACY.md - local memory API does not mean LLM calls never leave the PC."
-Write-Output "  6. Prefer examples/cursor.json (retainEveryNTurns=5); full dump: cursor.full-retain.json."
+Write-Output "  1. Install local Hindsight (hindsight-embed) so http://127.0.0.1:9077/mcp/cursor/ exists."
+Write-Output "  2. Point ~/.hindsight/cursor.json at http://127.0.0.1:9077 with autoRecall and autoRetain false."
+Write-Output "  3. Do not add a stop hook that runs retain.py. Continual Learning owns AGENTS.md prefs and workspace facts."
+Write-Output "  4. Remove any Windows Startup entry that starts the daemon at login."
+Write-Output "  5. Reload Cursor so hooks / MCP / skills pick up the new commands."
+Write-Output "     If ~/.cursor/hooks.json already exists, this installer does not overwrite it."
+Write-Output "  6. Read docs/PRIVACY.md - local memory API does not mean LLM calls never leave the PC."
 Write-Output "  7. Security reports: SECURITY.md / org checklist: docs/COMPLIANCE.md"
 Write-Output "  8. Dashboards (on demand, not auto-start): skill memory-graph-dashboards"
 Write-Output "     or: powershell -File ~/.hindsight/dashboard/start-dashboards.ps1 -Open"

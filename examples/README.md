@@ -16,12 +16,22 @@ Do not point it at a cloud Hindsight API. A cold daemon + wrong URL can fall thr
 
 ## Retain defaults (data minimization)
 
-| File | `retainEveryNTurns` | Use when |
-|------|---------------------|----------|
-| `cursor.json` (default example) | **5** | Typical / org-safer pacing |
-| `cursor.full-retain.json` | **1** | Maximum capture (more disk + more sensitive content retained) |
+On this branch both example configs set `autoRecall` and `autoRetain` to **false**, so hooks do not mine transcripts. That job belongs to Continual Learning (`AGENTS.md`).
 
-`install.ps1 -WriteCursorJson` copies **`cursor.json`** (leaner retain). Local API still does **not** mean the configured LLM never sees session text — see PRIVACY.md.
+| File | Automatic retain | Notes |
+|------|------------------|-------|
+| `cursor.json` | off | Default example for this branch |
+| `cursor.full-retain.json` | off | `retainEveryNTurns: 1` is unused while `autoRetain` is false. On `main` this file is the every-turn profile. |
+
+`install.ps1 -WriteCursorJson` copies **`cursor.json`**. Local API still does **not** mean the configured LLM never sees session text — see PRIVACY.md. Explicit MCP `retain` can still store text you ask the agent to keep.
+
+## No overlap with Continual Learning
+
+`hooks.json` has `sessionStart` only. That command runs `session-start-with-ensure.py`, which starts the local daemon and does not call `session_start.py`.
+
+There is no `stop` hook and no `retain.py`. Continual Learning already mines transcripts into `AGENTS.md` (`Learned User Preferences`, `Learned Workspace Facts`).
+
+`cursor.json` and `cursor.full-retain.json` set `autoRecall` and `autoRetain` to `false` on this branch. `retainEveryNTurns` in the full-retain file does nothing while `autoRetain` is false. Automatic transcript retain is the `main` release (v1.1.0). Do not turn the flags back on while the Continual Learning plugin is installed. Explicit MCP `recall` / `retain` / `reflect` stay available.
 
 ## MCP server name (orchestrator stack)
 
@@ -38,4 +48,4 @@ Paths use `YOU` as a stand-in for your Windows username. Prefer running `..\inst
 | `hooks.json` | `~/.cursor/hooks.json` |
 | `mcp.json` | `~/.cursor/mcp.json` |
 | `cursor.json` | `~/.hindsight/cursor.json` |
-| `cursor.full-retain.json` | optional replace for aggressive retain |
+| `cursor.full-retain.json` | optional file from `main`; on this branch `autoRetain` is false |

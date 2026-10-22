@@ -1,21 +1,42 @@
 # On-demand local Hindsight memory for Cursor (Windows)
 
-**Last updated:** 2026-10-04 · **License:** [MIT](LICENSE) · **OS:** Windows · **Release:** [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0)
+**Last updated:** 2026-10-22 · **License:** [MIT](LICENSE) · **OS:** Windows · **Branch:** `beside-continual-learning` · **Release:** [v1.2.0-beside-continual-learning](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.2.0-beside-continual-learning). [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0) on `main` still includes the automatic recall/retain loop.
 
 **Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
-**cursor-hindsight-ondemand** starts the local [Hindsight](https://github.com/vectorize-io/hindsight) memory daemon only when Cursor agent work needs it — not when Windows boots. It wires Cursor `sessionStart` hooks and MCP so recall/retain stay on `127.0.0.1`, without leaving `hindsight-embed` in Startup all day.
+**cursor-hindsight-ondemand** starts the local [Hindsight](https://github.com/vectorize-io/hindsight) memory daemon only when Cursor agent work needs it — not when Windows boots. On this branch, `sessionStart` only checks `/health` and starts `hindsight-embed`. Explicit MCP stays on `127.0.0.1`. The daemon is not left in Startup all day.
 
-> **In short:** If you use Hindsight with Cursor on Windows and hate an always-on daemon, install these wrappers. They check `/health`, start the daemon when an agent chat or MCP tools need it, wait until it is ready, then run the official recall path — still bound to localhost so a cold start does not fall through to Hindsight Cloud.
+> **In short:** Hindsight on Windows, without a 24/7 daemon, and without a second automatic memory loop next to the Continual Learning plugin. These wrappers check `/health`, start the local daemon for MCP, and stay on localhost so a cold start does not fall through to Hindsight Cloud.
 
 ## What is cursor-hindsight-ondemand?
 
-cursor-hindsight-ondemand is a small set of Windows wrappers that start local Hindsight (`hindsight-embed`) on demand for Cursor. It runs ensure → wait → official `sessionStart` / MCP paths against `http://127.0.0.1:9077`, so agent memory stays local and idle RAM stays free when Cursor is not using memory tools.
+cursor-hindsight-ondemand is a small set of Windows wrappers that start local Hindsight (`hindsight-embed`) on demand for Cursor. It runs ensure → wait → explicit MCP against `http://127.0.0.1:9077`, so idle RAM stays free when Cursor is not using memory tools.
 
-It does **not** replace Hindsight, Cursor, or a model router. Pair with [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** when you also want cost-aware model recommendations plus soft Hindsight retain.
+It does **not** replace Hindsight, Cursor, Continual Learning, or a model router. Pair with [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) **stack** when you also want cost-aware model recommendations. Orchestrator retain, when used, goes through the Hindsight MCP server. It does not go through a `stop` hook.
+
+## Beside Continual Learning
+
+[Continual Learning](https://github.com/cursor/plugins) already keeps ambient memory:
+
+- a `stop` hook reads the agent transcript
+- `agents-memory-updater` writes `## Learned User Preferences` and `## Learned Workspace Facts` into `AGENTS.md`
+- Cursor loads that file on later turns
+
+This branch deletes the matching Hindsight loop. Dashboards, the on-demand daemon, and explicit MCP stay.
+
+| Continual Learning | Removed from this branch |
+|--------------------|--------------------------|
+| `stop` reads the transcript | no `stop` hook, no `retain.py` |
+| durable prefs and workspace facts land in `AGENTS.md` | `autoRetain: false` |
+| later chats see those bullets via `AGENTS.md` | no `session_start.py`, no `.cursor/rules/hindsight-session.mdc` |
+
+`main` (release v1.1.0) still ships that automatic loop, for setups that do not use Continual Learning.
+
+What stays here is the part Continual Learning does not do: on-demand local `hindsight-embed`, explicit MCP (`recall`, `retain`, `reflect`, directives, mental models, knowledge pages), and the Memory & Graphs hub. Use MCP when you need searchable history or structured memory, not a second copy of the `AGENTS.md` bullets.
 
 ## Contents
 
+- [Beside Continual Learning](#beside-continual-learning)
 - [Who this is for](#who-this-is-for)
 - [What you get](#what-you-get)
 - [Memory & Graphs dashboards](#memory--graphs-dashboards)
@@ -31,7 +52,7 @@ It does **not** replace Hindsight, Cursor, or a model router. Pair with [cursor-
 
 ## Who this is for
 
-- Cursor users who want **cross-chat agent memory** via local Hindsight
+- Cursor users who want **explicit local Hindsight MCP** (recall, retain, reflect, directives, mental models) while Continual Learning keeps prefs and workspace facts in `AGENTS.md`
 - People who previously put `hindsight-embed` in **Windows Startup** and want that gone
 - Setups that must stay on **`http://127.0.0.1:9077`** (no silent cloud API)
 - Orchestrator **stack** users who need the Hindsight MCP lifecycle this skill soft-depends on
@@ -44,13 +65,14 @@ It does **not** replace Hindsight, Cursor, or a model router. Pair with [cursor-
 | You need a code-intelligence graph / impact analysis | Upstream GitNexus (not this repo) |
 | You are fine with Hindsight in Windows Startup 24/7 | Official Hindsight install alone |
 | You want macOS or Linux wrappers | Out of scope here (Windows only) |
+| You do not use Continual Learning and want automatic transcript recall/retain | Branch `main`, release v1.1.0 |
 
 ## What you get
 
 | Piece | Role |
 |--------|------|
 | `ensure-daemon.ps1` | Idempotent health check + local start |
-| `session-start-with-ensure.py` | Cursor `sessionStart` → ensure → official recall |
+| `session-start-with-ensure.py` | Cursor `sessionStart` → ensure daemon only. Does not call official `session_start.py` |
 | `mcp-launch.mjs` | **Preferred** Cursor MCP entry (`node`): ensure → `mcp-remote` → local Hindsight (hides console windows) |
 | `mcp-launch.ps1` | Legacy PowerShell launcher; thin wrapper that calls `mcp-launch.mjs` |
 | `install.ps1` | Copies wrappers into `~/.hindsight`, installs dashboard scripts + skill `memory-graph-dashboards` (writes `node …/mcp-launch.mjs` when `-WriteMcp`) |
@@ -90,9 +112,9 @@ Add `-AlsoApi` only if you also want the Hindsight daemon stopped. Details: [das
 
 ## How it works
 
-1. **Agent session** — On `sessionStart`, the wrapper probes `http://127.0.0.1:9077/health`. If the daemon is down, it starts `hindsight-embed` for the `cursor` profile, waits up to ~150 seconds, then runs Hindsight `session_start.py`.
-2. **MCP tools** — The same ensure step runs before a stdio proxy to `http://127.0.0.1:9077/mcp/cursor/`.
-3. **Local only** — Keep `"hindsightApiUrl": "http://127.0.0.1:9077"` in `~/.hindsight/cursor.json` so a down daemon does not switch to the hosted API.
+1. **Agent session** — On `sessionStart`, the wrapper probes `http://127.0.0.1:9077/health`. If the daemon is down, it starts `hindsight-embed` for the `cursor` profile and waits up to ~150 seconds. It does not recall memories into the prompt.
+2. **MCP tools** — The same ensure step runs before a stdio proxy to `http://127.0.0.1:9077/mcp/cursor/`. Call `recall` / `retain` / `reflect` from the agent when you need them.
+3. **Local only** — Keep `"hindsightApiUrl": "http://127.0.0.1:9077"` and `"autoRecall": false`, `"autoRetain": false` in `~/.hindsight/cursor.json`. A down daemon must not switch to the hosted API, and the official plugin scripts must no-op if something still invokes them.
 
 ### Cold start timing
 
@@ -105,13 +127,13 @@ After idle, first readiness is typically **40–120 seconds** (models + DB). Set
 | Layer | What this repo does |
 |-------|---------------------|
 | Hindsight HTTP / MCP API | Stays on `127.0.0.1:9077`. `ensure-daemon.ps1` **refuses** non-loopback `-BaseUrl` unless you pass `-AllowNonLocal` (discouraged). |
-| Session retain / recall | Runs via upstream Hindsight plugin scripts on **your** disk when hooks are enabled. |
+| Session retain / recall | Not run from hooks on this branch. Explicit MCP `retain` / `recall` still can store or read the local bank when you call them. |
 | LLM used by `hindsight-embed` | Configured in `start-daemon.ps1` / `cursor.json` (`llmProvider` / `llmModel`). **May send content to that provider** even when the memory API is local. |
 | Cursor IDE | Separate proprietary product with its own privacy terms. |
 
 **Local memory API ≠ “nothing leaves the machine.”**
 
-Example `examples/cursor.json` uses `retainEveryNTurns: 5` (leaner). For every-turn capture use `examples/cursor.full-retain.json`. Wipe guidance is in PRIVACY.md.
+Example `examples/cursor.json` sets `autoRecall` and `autoRetain` to `false`. `examples/cursor.full-retain.json` does the same on this branch; its `retainEveryNTurns` value is unused while `autoRetain` is false. Automatic transcript retain lives on `main`. Wipe guidance is in PRIVACY.md.
 
 ### Compared to Windows Startup
 
@@ -125,17 +147,18 @@ Example `examples/cursor.json` uses `retainEveryNTurns: 5` (leaner). For every-t
 
 - Windows + PowerShell
 - [Cursor](https://cursor.com)
-- Local Hindsight / `hindsight-embed` + official Cursor integration (`session_start.py`, `retain.py` on disk)
-- Python 3 (hooks)
+- Local Hindsight / `hindsight-embed` with MCP at `http://127.0.0.1:9077/mcp/cursor/`
+- Python 3 (the ensure hook)
 - Node.js + `npx` (MCP launcher via `mcp-remote`)
 
-**Known upstream gap:** some Hindsight `init` installs omit `scripts/lib/rules_file.py`, which breaks `session_start.py` with `ModuleNotFoundError: lib.rules_file`. Copy that file from the [upstream Cursor integration](https://github.com/vectorize-io/hindsight) into the plugin `lib` folder.
+This branch does not call `session_start.py` or `retain.py`. The upstream `rules_file.py` gap only matters on `main`, where those official hook scripts run.
 
 ## Install
 
 ```powershell
 git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
 cd cursor-hindsight-ondemand
+git checkout beside-continual-learning
 .\install.ps1
 ```
 
@@ -188,6 +211,7 @@ The paired project [cursor-model-orchestrator](https://github.com/dapetun/cursor
    ```powershell
    git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
    cd cursor-hindsight-ondemand
+   git checkout beside-continual-learning
    .\install.ps1
    .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson   # optional
    ```
@@ -200,7 +224,13 @@ The paired project [cursor-model-orchestrator](https://github.com/dapetun/cursor
 
 ### Does this replace Hindsight?
 
-No. It only starts and waits for your local Hindsight daemon when Cursor needs it, then calls the official plugin scripts.
+No. It only starts and waits for your local Hindsight daemon. Explicit memory tools stay on the Hindsight MCP server.
+
+### Does this replace Continual Learning?
+
+No. Continual Learning owns incremental transcript learning into `AGENTS.md`. This branch does not write `Learned User Preferences` or `Learned Workspace Facts`, and it does not inject a parallel rules file at session start.
+
+If the official Hindsight Cursor plugin is also enabled, disable its `sessionStart` (`session_start.py`) and `stop` (`retain.py`) hooks. Otherwise that plugin puts the removed loop back.
 
 ### Do I need cursor-model-orchestrator?
 
@@ -248,7 +278,7 @@ No. `install.ps1` only copies scripts and the skill. UIs start when you run `sta
 scripts/     ensure-daemon, start-daemon, mcp-launch.mjs (+ legacy .ps1), session-start, uv console shims
 dashboard/   hub UI + hub-server + start/stop dashboards
 .cursor/skills/memory-graph-dashboards/   Cursor skill (installed to ~/.cursor/skills)
-examples/    sample Cursor / Hindsight JSON (+ lean vs full-retain)
+examples/    sample Cursor / Hindsight JSON (no stop/retain hook; autoRecall and autoRetain false)
 docs/        INTEGRATIONS, PRIVACY, COMPLIANCE
 install.ps1  installer (wrappers + dashboard + skill)
 llms.txt     short summary for AI tools
@@ -270,23 +300,39 @@ MIT — see [LICENSE](LICENSE). Third-party software you install separately is l
 
 # Локальная память Hindsight для Cursor по требованию (Windows)
 
-**Обновлено:** 2026-10-04 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows · **Релиз:** [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0)
+**Обновлено:** 2026-10-22 · **Лицензия:** [MIT](LICENSE) · **ОС:** Windows · **Ветка:** `beside-continual-learning` · **Релиз:** [v1.2.0-beside-continual-learning](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.2.0-beside-continual-learning). [v1.1.0](https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0) на `main` по-прежнему включает автоматический recall/retain.
 
 **Парный проект (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — [README](https://github.com/dapetun/cursor-model-orchestrator#readme) · [v0.1.0](https://github.com/dapetun/cursor-model-orchestrator/releases/tag/v0.1.0) · [stack.md](https://github.com/dapetun/cursor-model-orchestrator/blob/main/docs/integrations/stack.md)
 
-**cursor-hindsight-ondemand** поднимает локальный демон [Hindsight](https://github.com/vectorize-io/hindsight) только когда нужна агентская работа в Cursor — не при входе в Windows. Хуки `sessionStart` и MCP держат recall/retain на `127.0.0.1`, без постоянного `hindsight-embed` в автозагрузке.
+**cursor-hindsight-ondemand** поднимает локальный демон [Hindsight](https://github.com/vectorize-io/hindsight) только когда нужна агентская работа в Cursor, не при входе в Windows. На этой ветке `sessionStart` только проверяет `/health` и стартует демон. Явный MCP остаётся на `127.0.0.1`.
 
-> **Коротко:** пользуетесь Hindsight с Cursor на Windows и не хотите демон 24/7 — поставьте эти обёртки. Они проверяют `/health`, стартуют демон для агентского чата или MCP, ждут готовности и вызывают официальный recall, оставаясь на localhost.
+> **Коротко:** Hindsight на Windows без демона 24/7 и без второго автоматического цикла памяти рядом с плагином Continual Learning. Обёртки проверяют `/health`, поднимают локальный демон для MCP и не уходят в облако.
 
 ## Что это такое?
 
-cursor-hindsight-ondemand — обёртки Windows, которые стартуют локальный Hindsight по требованию для Cursor. Путь: ensure → ожидание → официальный `sessionStart` / MCP на `http://127.0.0.1:9077`. Память остаётся локальной; между сессиями демон не обязан держать RAM.
+cursor-hindsight-ondemand - обёртки Windows, которые стартуют локальный Hindsight по требованию. Путь: ensure, затем явный MCP на `http://127.0.0.1:9077`. Между сессиями демон не обязан держать RAM. Дашборды Memory & Graphs остаются и стартуют только по запросу.
 
-Это **не** замена Hindsight и **не** роутер моделей. Для роутинга + soft retain смотрите [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) профиль **stack**.
+Это не замена Hindsight, не Continual Learning и не роутер моделей. Роутинг: [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator), профиль **stack**. Retain оркестратора, если он есть, идёт через MCP `hindsight`, не через хук `stop`.
+
+## Рядом с Continual Learning
+
+Плагин Continual Learning уже ведёт фоновую память: хук `stop` читает транскрипт и дописывает в `AGENTS.md` секции `## Learned User Preferences` и `## Learned Workspace Facts`. Cursor подхватывает этот файл в следующих чатах.
+
+Эта ветка убирает тот же цикл у Hindsight:
+
+| Continual Learning | Снято здесь |
+|--------------------|-------------|
+| `stop` читает транскрипт | нет хука `stop` и нет `retain.py` |
+| предпочтения и факты workspace попадают в `AGENTS.md` | `autoRetain: false` |
+| следующие чаты видят эти пункты через `AGENTS.md` | нет `session_start.py` и нет `.cursor/rules/hindsight-session.mdc` |
+
+Ветка `main` (релиз v1.1.0) этот автоматический цикл сохраняет.
+
+Здесь остаётся то, чего у плагина нет: демон по требованию, явный MCP и хаб дашбордов.
 
 ## Кому это нужно
 
-- Нужна **память между чатами** через локальный Hindsight
+- Нужен явный локальный MCP Hindsight, а предпочтения и факты workspace уже пишет Continual Learning в `AGENTS.md`
 - Раньше демон сидел в **автозагрузке Windows** — хотите убрать
 - Важно не уехать в **облачный API** Hindsight
 - Ставите orchestrator **stack** и нужен lifecycle Hindsight MCP
@@ -299,12 +345,13 @@ cursor-hindsight-ondemand — обёртки Windows, которые старт�
 | Граф кода / impact | upstream GitNexus |
 | Демон в Startup устраивает | только официальный Hindsight |
 | macOS / Linux | вне scope этого репо |
+| Нет Continual Learning, нужен автоматический recall/retain | ветка `main`, релиз v1.1.0 |
 
 ## Как работает
 
-1. Хук `sessionStart` → `/health` → при необходимости старт демона → официальный `session_start.py`
-2. MCP → тот же ensure → `mcp-remote` на локальный endpoint
-3. В `cursor.json` оставляйте `"hindsightApiUrl": "http://127.0.0.1:9077"`
+1. Хук `sessionStart` проверяет `/health` и при необходимости стартует демон. Recall в промпт не пишет.
+2. MCP: тот же ensure, затем `mcp-remote` на локальный endpoint. `recall` / `retain` / `reflect` вызываются явно.
+3. В `cursor.json`: `"hindsightApiUrl": "http://127.0.0.1:9077"`, `"autoRecall": false`, `"autoRetain": false`.
 
 Холодный старт обычно **40–120 с**; таймаут хука — **180**.
 
@@ -314,13 +361,14 @@ cursor-hindsight-ondemand — обёртки Windows, которые старт�
 
 - HTTP/MCP API памяти — только `127.0.0.1:9077`; нелокальный `BaseUrl` без `-AllowNonLocal` отклоняется.
 - Локальный API **не** означает, что LLM (Hindsight embed / Cursor) никогда не увидит текст сессии.
-- Пример `cursor.json`: `retainEveryNTurns: 5`; агрессивный вариант — `cursor.full-retain.json`.
+- В `cursor.json` этой ветки `autoRecall` и `autoRetain` выключены. Автоматический retain транскрипта есть на `main`.
 
 ## Установка
 
 ```powershell
 git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
 cd cursor-hindsight-ondemand
+git checkout beside-continual-learning
 .\install.ps1
 .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson   # опционально
 ```
@@ -369,7 +417,13 @@ powershell -NoProfile -File $env:USERPROFILE\.hindsight\dashboard\stop-dashboard
 
 ### Это замена Hindsight?
 
-Нет. Только старт по требованию и вызов официальных скриптов.
+Нет. Только старт демона по требованию. Явные инструменты памяти остаются на MCP Hindsight.
+
+### Это замена Continual Learning?
+
+Нет. Плагин сам дописывает `AGENTS.md`. Эта ветка не пишет `Learned User Preferences` / `Learned Workspace Facts` и не кладёт параллельный rules-файл на старте сессии.
+
+Если включён официальный плагин Hindsight для Cursor, отключите его хуки `sessionStart` (`session_start.py`) и `stop` (`retain.py`). Иначе он вернёт снятый цикл.
 
 ### Нужен ли cursor-model-orchestrator?
 

@@ -2,13 +2,15 @@
 
 > On-demand local Hindsight memory daemon for Cursor on Windows.
 
-cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud. `ensure-daemon.ps1` refuses non-loopback BaseUrl unless `-AllowNonLocal` is set.
+Branch `beside-continual-learning`, release v1.2.0-beside-continual-learning. `main` release v1.1.0 still runs automatic Hindsight recall/retain.
 
-**Use this repo when:** you want local Cursor agent memory without a 24/7 Startup daemon; optionally a localhost hub linking official Hindsight UI + GitNexus web.  
-**Do not use this repo for:** model routing YAML, or vendoring GitNexus itself.  
+cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent session or MCP tools need memory — not at Windows logon. Traffic stays on `http://127.0.0.1:9077` so a cold start does not fall through to Hindsight Cloud. `ensure-daemon.ps1` refuses non-loopback BaseUrl unless `-AllowNonLocal` is set. This branch does not call `session_start.py` or `retain.py`. Continual Learning owns transcript preferences and workspace facts in `AGENTS.md`.
+
+**Use this repo when:** you want local Hindsight MCP without a 24/7 Startup daemon, Continual Learning already covers ambient prefs/facts, and you optionally want a localhost hub linking official Hindsight UI + GitNexus web.  
+**Do not use this repo for:** model routing YAML, vendoring GitNexus itself, or a second automatic transcript memory loop. Use `main` (v1.1.0) if you want that loop and do not use Continual Learning.  
 **Stack partner (public MIT):** [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) — install `-Profile stack` for soft Hindsight `retain`. This repo is lifecycle only, not the model router.
 
-**Privacy:** local HTTP API ≠ no LLM egress. Hindsight embed / Cursor may still send session text to configured providers. See docs/PRIVACY.md. Default example retain pacing: `retainEveryNTurns: 5` (`examples/cursor.json`); aggressive: `examples/cursor.full-retain.json`.
+**Privacy:** local HTTP API ≠ no LLM egress. Hindsight embed / Cursor may still send session text to configured providers. See docs/PRIVACY.md. This branch sets `autoRecall` and `autoRetain` false. Automatic retain pacing (`retainEveryNTurns`) applies on `main` only.
 
 ## Canon (orchestrator stack)
 
@@ -31,13 +33,15 @@ cursor-hindsight-ondemand starts `hindsight-embed` only when a Cursor agent sess
 
 - Platform: Windows + PowerShell (+ Python hooks, Node for MCP)
 - Cold start: typically 40–120s; set Cursor `sessionStart` timeout to 180
-- License: MIT · DCO for contributions · Release: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0
+- Hooks: `sessionStart` ensure-only. No `stop` / `retain.py`. `autoRecall` and `autoRetain` are false.
+- License: MIT · DCO for contributions · This branch: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.2.0-beside-continual-learning · `main`: https://github.com/dapetun/cursor-hindsight-ondemand/releases/tag/v1.1.0
 
 ## Install
 
 ```powershell
 git clone https://github.com/dapetun/cursor-hindsight-ondemand.git
 cd cursor-hindsight-ondemand
+git checkout beside-continual-learning
 .\install.ps1
 .\install.ps1 -WriteHooks -WriteMcp -WriteCursorJson   # optional examples
 ```
@@ -68,4 +72,4 @@ Installs with `install.ps1` into `~/.hindsight/dashboard` + `~/.cursor/skills/me
 
 ## Not included
 
-GitNexus product binaries, model-routing YAML, and the `model-orchestrator` skill are out of scope. This repo covers on-demand Hindsight lifecycle wrappers plus an optional hub that *links* official Hindsight/GitNexus UIs when those tools are installed.
+GitNexus product binaries, model-routing YAML, the `model-orchestrator` skill, and Continual Learning's transcript-to-AGENTS.md loop are out of scope. This branch covers on-demand Hindsight lifecycle, explicit MCP, and an optional hub that links official Hindsight/GitNexus UIs when those tools are installed.

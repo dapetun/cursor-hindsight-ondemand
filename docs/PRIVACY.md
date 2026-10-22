@@ -1,6 +1,6 @@
 # Privacy & data handling
 
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-22
 
 > **Not legal advice.** This note describes what *this repository* does and does not do with data. It is an engineering disclosure for installers and org adopters. A licensed lawyer must review any text you publish as a formal privacy policy, оферта, or operator notice (152-ФЗ / GDPR).
 
@@ -12,7 +12,7 @@ The copyright holder of this repository is **not**, by distributing these script
 
 ## What can end up on disk
 
-When you install and enable hooks/MCP, **your machine** may store agent-session content via upstream Hindsight retain/recall (plugin scripts under `~/.hindsight/plugin-host/…`). Typical categories:
+When you install and enable MCP, **your machine** may store content you explicitly retain through Hindsight MCP (`retain` / `sync_retain`). This branch does **not** register a `stop` hook and does **not** call `session_start.py`, so transcripts are not copied into the bank automatically. Continual Learning, if installed, writes preferences and workspace facts into `AGENTS.md` instead. Typical categories if you do call MCP retain:
 
 | Category | Examples | Who controls it |
 |----------|----------|-----------------|
@@ -34,7 +34,7 @@ Reading “local memory” in the README means the **Hindsight HTTP API** stays 
 
 ## Safer retain defaults
 
-Example `examples/cursor.json` uses **leaner** retain pacing (`retainEveryNTurns: 5`) than an every-turn full dump. For maximum capture see `examples/cursor.full-retain.json`. Org adopters should prefer lean retain and define retention/wipe policy internally.
+On this branch `examples/cursor.json` and `examples/cursor.full-retain.json` set `autoRecall` and `autoRetain` to false. Automatic transcript retain is the `main` release (v1.1.0), where the lean default is `retainEveryNTurns: 5` and the aggressive file uses `1`. Org adopters on `main` should prefer lean retain and define retention/wipe policy internally. On this branch, define policy for explicit MCP retains and for Continual Learning's `AGENTS.md` bullets.
 
 ## How to wipe local memory (operator self-help)
 
@@ -90,7 +90,7 @@ General project: GitHub issues on [dapetun/cursor-hindsight-ondemand](https://gi
 
 # Конфиденциальность и данные (RU)
 
-**Обновлено:** 2026-10-03
+**Обновлено:** 2026-10-22
 
 > **Не юридическая консультация.** Ниже — инженерное описание поведения репозитория.
 
@@ -98,6 +98,6 @@ General project: GitHub issues on [dapetun/cursor-hindsight-ondemand](https://gi
 
 **Важно:** локальный API памяти ≠ гарантия, что LLM (Hindsight embed / Cursor) никогда не получит текст сессии. Проверяйте провайдера модели и условия Cursor.
 
-Хранение сессий — у вас локально через upstream retain. Пример `cursor.json` использует более редкий retain; агрессивный вариант — `cursor.full-retain.json`. Как стереть банк — см. английскую секцию wipe выше и документацию Hindsight.
+Хранение сессий в банк Hindsight на этой ветке не автоматическое: хук `stop` и `session_start.py` не вызываются. Явный MCP `retain` по-прежнему может записать то, что вы попросите сохранить. Предпочтения и факты workspace при установленном Continual Learning попадают в `AGENTS.md`. Как стереть банк - см. английскую секцию wipe выше и документацию Hindsight.
 
 При коммерческом сборе ПДн граждан РФ (лендинг, SaaS) нужны отдельные политика, уведомление РКН, локализация и договоры — этот MIT-glue их не закрывает.
