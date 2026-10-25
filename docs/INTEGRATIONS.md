@@ -1,6 +1,6 @@
 # Integrations boundary
 
-**Last updated:** 2026-10-22
+**Last updated:** 2026-10-25
 
 **Branch:** `beside-continual-learning` (release v1.2.0-beside-continual-learning). `main` release v1.1.0 still wires automatic recall (`session_start.py`) and retain (`retain.py`).
 
@@ -28,7 +28,7 @@ Privacy boundary (local API vs LLM egress): [PRIVACY.md](PRIVACY.md). Org checkl
 | Concern | Where it lives |
 |---------|----------------|
 | Model routing skill, `routes.yaml` / `budget.yaml` / classifier | [cursor-model-orchestrator](https://github.com/dapetun/cursor-model-orchestrator) (public MIT) |
-| GitNexus MCP, impact / detect_changes, code graph | Upstream GitNexus (not vendored here) |
+| GitNexus MCP, impact / detect_changes, code graph | Upstream GitNexus (not vendored here). This repo is Cursor-first: skills under `.cursor/skills/`, `.gitnexusrc` sets `analyze.skipSkills` so analyze does not create `.claude/` (Claude Code only). |
 | Official Hindsight product / `hindsight-embed` binary | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) |
 | Incremental transcript learning into `AGENTS.md` (`## Learned User Preferences`, `## Learned Workspace Facts`) | Cursor plugin Continual Learning (`stop` hook + `agents-memory-updater`) |
 | Automatic Hindsight recall at session start and automatic `retain.py` on `stop` | Branch `main` (release v1.1.0), or the official Hindsight Cursor plugin hooks. Not this branch. |

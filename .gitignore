@@ -8,5 +8,10 @@ ensure-daemon.lock
 __pycache__/
 .venv/
 node_modules/
+# Claude Code only — this repo is Cursor-first (.cursor/). Kept ignored so a
+# mistaken `gitnexus analyze` without skipSkills does not dirty git status.
 .claude/
+# GitNexus skill copies live under .cursor/skills/ locally; product skill stays tracked.
+.cursor/skills/gitnexus-*/
 AGENTS.md
+
